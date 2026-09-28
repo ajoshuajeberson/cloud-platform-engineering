@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: cloud-platform-api
-          image: ghcr.io/ajoshuajeberson/cloud-platform-api:latest
+          image: ghcr.io/ajoshuajeberson/cloud-platform-api:14c54bc1b8ad8a6ce317e503885e7f415427aff5
           imagePullPolicy: IfNotPresent
 
           ports:

@@ -8,6 +8,10 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
@@ -34,6 +38,20 @@ jobs:
       - name: Build application
         run: go build -o cloud-platform-api .
 
-      - name: Build Docker image
+      - name: Log in to GitHub Container Registry
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         working-directory: .
-        run: docker build -t cloud-platform-api:ci ./application
+        run: |
+          IMAGE_NAME=ghcr.io/${{ github.repository_owner }}/cloud-platform-api
+          docker build -t $IMAGE_NAME:${{ github.sha }} ./application
+          docker push $IMAGE_NAME:${{ github.sha }}
+          docker tag $IMAGE_NAME:${{ github.sha }} $IMAGE_NAME:latest
+          docker push $IMAGE_NAME:latest

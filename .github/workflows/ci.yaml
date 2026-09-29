@@ -70,3 +70,36 @@ jobs:
 
           docker push $IMAGE_NAME:${{ github.sha }}
           docker push $IMAGE_NAME:latest
+
+  deploy:
+    name: Deploy to Kubernetes
+    needs: test-and-build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify Kubernetes access
+        run: |
+          kubectl config current-context
+          kubectl get nodes
+
+      - name: Deploy image to Kubernetes
+        run: |
+          IMAGE_NAME=ghcr.io/${{ github.repository_owner }}/cloud-platform-api
+
+          kubectl set image deployment/cloud-platform-api \
+            cloud-platform-api=$IMAGE_NAME:${{ github.sha }} \
+            -n cloud-platform
+
+      - name: Verify rollout
+        run: |
+          kubectl rollout status deployment/cloud-platform-api \
+            -n cloud-platform \
+            --timeout=180s
+
+      - name: Verify application pods
+        run: |
+          kubectl get pods -n cloud-platform

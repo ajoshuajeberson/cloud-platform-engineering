@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: cloud-platform-api
+  namespace: monitoring
+  labels:
+    release: monitoring
+spec:
+  namespaceSelector:
+    matchNames:
+      - cloud-platform
+  selector:
+    matchLabels:
+      app: cloud-platform-api
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
